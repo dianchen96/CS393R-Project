@@ -426,6 +426,7 @@ DECLARE_INTERNAL_SCHEMA(class WorldObject {
     // Robot detection
     SCHEMA_FIELD(int imageHeight);
     SCHEMA_FIELD(int imageWidth);
+    SCHEMA_FIELD(int pose);
 
     // // NEW Ball Kalman Filter
     // SCHEMA_FIELD(float worldX);
