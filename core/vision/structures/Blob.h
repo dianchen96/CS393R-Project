@@ -28,6 +28,9 @@ struct Blob {
   int edgeSize;
   int edgeStrength;
 
+  uint16_t rowCount;
+  // std:: 
+
   Blob() : lpIndex(MAX_BLOB_VISIONPOINTS, 0) { }
 };
 
@@ -35,6 +38,7 @@ inline ostream& operator<<(ostream &Str, Blob const& v) {
   Str << "(" << v.avgX << ", " << v.avgY << ") ";
   Str << "(" << v.xi << ", " << v.xf << ") ";
   Str << "(" << v.yi << ", " << v.yf << ") ";
+  Str << "(avgWidth: " << v.avgWidth << ") ";
 
   return Str;
 }

@@ -1,6 +1,7 @@
 #include <vision/ImageProcessor.h>
 #include <vision/Classifier.h>
 #include <vision/BeaconDetector.h>
+#include <vision/RobotDetector.h>
 #include <vision/Logging.h>
 #include <iostream>
 #include <cmath>
@@ -61,6 +62,9 @@ void ImageProcessor::mergeBlobs(int idx1, int idx2) {
         rle_ptr[p1]->yf = max(rle_ptr[p1]->yf, rle_ptr[p2]->yf);
         rle_ptr[p1]->xsum += rle_ptr[p2]->xsum;
         rle_ptr[p1]->ysum += rle_ptr[p2]->ysum;
+        rle_ptr[p1]->avgWidth = (rle_ptr[p1]->avgWidth*rle_ptr[p1]->rowCount + 
+            rle_ptr[p2]->avgWidth*rle_ptr[p2]->rowCount) / (rle_ptr[p1]->rowCount+rle_ptr[p2]->rowCount);
+        rle_ptr[p1]->rowCount += rle_ptr[p2]->rowCount;
     }
     else if(r2 > r1) {
         rle_ptr[p1]->parent = p2;
@@ -71,6 +75,9 @@ void ImageProcessor::mergeBlobs(int idx1, int idx2) {
         rle_ptr[p2]->yf = max(rle_ptr[p1]->yf, rle_ptr[p2]->yf);
         rle_ptr[p2]->xsum += rle_ptr[p1]->xsum;
         rle_ptr[p2]->ysum += rle_ptr[p1]->ysum;
+        rle_ptr[p2]->avgWidth = (rle_ptr[p1]->avgWidth*rle_ptr[p1]->rowCount + 
+            rle_ptr[p2]->avgWidth*rle_ptr[p2]->rowCount) / (rle_ptr[p1]->rowCount+rle_ptr[p2]->rowCount);
+        rle_ptr[p2]->rowCount += rle_ptr[p1]->rowCount;
     }
     else {
         rle_ptr[p2]->parent = p1;
@@ -82,6 +89,9 @@ void ImageProcessor::mergeBlobs(int idx1, int idx2) {
         rle_ptr[p1]->yf = max(rle_ptr[p1]->yf, rle_ptr[p2]->yf);
         rle_ptr[p1]->xsum += rle_ptr[p2]->xsum;
         rle_ptr[p1]->ysum += rle_ptr[p2]->ysum;
+        rle_ptr[p1]->avgWidth = (rle_ptr[p1]->avgWidth*rle_ptr[p1]->rowCount + 
+            rle_ptr[p2]->avgWidth*rle_ptr[p2]->rowCount) / (rle_ptr[p1]->rowCount+rle_ptr[p2]->rowCount);
+        rle_ptr[p1]->rowCount += rle_ptr[p2]->rowCount;
     }
 }
 
@@ -124,6 +134,8 @@ Blob makeBlob(RLE* r) {
     b.lpCount = r->npixels;
     b.avgX = r->xsum / r->npixels;
     b.avgY = r->ysum / r->npixels;
+
+    b.avgWidth = r->avgWidth;
     
     return b;
 }
@@ -164,6 +176,7 @@ ImageProcessor::ImageProcessor(VisionBlocks& vblocks, const ImageParams& iparams
   enableCalibration_ = false;
   color_segmenter_ = std::make_unique<Classifier>(vblocks_, vparams_, iparams_, camera_);
   beacon_detector_ = std::make_unique<BeaconDetector>(DETECTOR_PASS_ARGS);
+  robot_detector_ = std::make_unique<RobotDetector>(DETECTOR_PASS_ARGS);
   calibration_ = std::make_unique<RobotCalibration>();
 }
 
@@ -175,6 +188,7 @@ void ImageProcessor::init(TextLogger* tl){
   vparams_.init();
   color_segmenter_->init(tl);
   beacon_detector_->init(tl);
+  robot_detector_->init(tl);
 }
 
 unsigned char* ImageProcessor::getImg() {
@@ -283,9 +297,9 @@ void ImageProcessor::processFrame(){
 
   detectGoal();
 
-  // detectRobot();
-
   beacon_detector_->findBeacons(detected_blobs);
+  robot_detector_->findRobots(detected_blobs);
+
 }
 
 // void detectRobot() {

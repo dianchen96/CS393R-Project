@@ -76,6 +76,7 @@ void VisionWindow::updateBigImage() {
     if (cbxOverlay->isChecked()) {
       drawGoal(bigImage);
       drawBall(bigImage);
+      drawRobots(bigImage);
       drawBallCands(bigImage);
       drawBeacons(bigImage);
     }
@@ -103,11 +104,13 @@ void VisionWindow::redrawImages(ImageWidget* rawImage, ImageWidget* segImage, Im
   if (cbxOverlay->isChecked()) {
     drawGoal(rawImage);
     drawBall(rawImage);
+    drawRobots(rawImage);
     drawBallCands(rawImage);
     drawBeacons(rawImage);
 
     drawGoal(segImage);
     drawBall(segImage);
+    drawRobots(segImage);
     drawBallCands(segImage);
     drawBeacons(segImage);
   }
@@ -227,6 +230,29 @@ void VisionWindow::drawBall(ImageWidget* image) {
     int radius = ball->radius;
     painter.drawEllipse(ball->imageCenterX - radius, ball->imageCenterY - radius, radius * 2, radius * 2);
   }
+}
+
+void VisionWindow::drawRobots(ImageWidget* image) {
+  if(!config_.all) return;
+  if(world_object_block_ == NULL) return;
+
+  QPainter painter(image->getImage());
+  painter.setPen(QPen(QColor(232, 40, 193), 3));
+
+  for (int i = 0; i < NUM_ROBOTS; i++) {
+    auto &robot = world_object_block_->objects_[WO_ROBOT_1 + i];
+    if(not robot.seen) return;
+    if(robot.fromTopCamera and _widgetAssignments[image] == Camera::BOTTOM) return;
+    if(not robot.fromTopCamera and _widgetAssignments[image] == Camera::TOP) return;
+
+    int width = robot.imageWidth;
+    int height = robot.imageHeight;
+    int x = robot.imageCenterX - width/2;
+    int y = robot.imageCenterY - height/2;
+
+    painter.drawRect(QRect(x, y, width, height));
+  }
+
 }
 
 void VisionWindow::drawGoal(ImageWidget* image) {

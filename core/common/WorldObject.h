@@ -190,6 +190,7 @@ const int NUM_UNKNOWN_T = 2;
 const int NUM_UNKNOWN_LINES = 4;
 const int NUM_UNKNOWN_POSTS = 3;
 
+// Robot detection
 const int ROBOTS_OFFSET = WO_ROBOT_1;
 const int NUM_ROBOTS = WO_ROBOT_4 - WO_ROBOT_1 + 1;
 

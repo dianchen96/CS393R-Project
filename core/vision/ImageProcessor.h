@@ -18,6 +18,7 @@
 class BallDetector;
 class Classifier;
 class BeaconDetector;
+class RobotDetector;
 
 struct RLE {
     int lcol;
@@ -33,6 +34,8 @@ struct RLE {
 	int yf;
 	int xsum;
 	int ysum;
+    uint16_t rowCount;
+    float avgWidth;
 
     RLE(int y, int l, int r, int idx, int c, int ystep) {
         lcol = l;
@@ -46,6 +49,9 @@ struct RLE {
 		yi = y; yf = y + ystep - 1;
 		xsum = ((r + l) / 2) * (r - l + 1) * ystep;
 		ysum = y * (r - l + 1) * ystep;
+
+        rowCount = 1;
+        avgWidth = r-l;
     }
 };
 
@@ -67,6 +73,7 @@ class ImageProcessor {
     void init(TextLogger*);
     void SetColorTable(unsigned char*);
     std::unique_ptr<BeaconDetector> beacon_detector_;
+    std::unique_ptr<RobotDetector> robot_detector_;
     std::unique_ptr<Classifier> color_segmenter_;
     unsigned char* getImg();
     unsigned char* getSegImg();
