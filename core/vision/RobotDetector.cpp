@@ -1,6 +1,9 @@
 #include <vision/RobotDetector.h>
 #include <memory/TextLogger.h>
 #include <vision/Logging.h>
+#include <VisionCore.h>
+
+// #define IS_RUNNING_CORE (core_ && core_->vision_ && ((UTMainWnd*)parent_)->runCoreRadio->isChecked())
 
 RobotDetector::RobotDetector(DETECTOR_DECLARE_ARGS) : DETECTOR_INITIALIZE {
 	// Load shape banks
@@ -8,8 +11,21 @@ RobotDetector::RobotDetector(DETECTOR_DECLARE_ARGS) : DETECTOR_INITIALIZE {
 
 	for (int i = 0; i < NUM_SHAPE_BANK; i++) {
 		std::ostringstream filename;
-		filename << std::getenv("NAO_HOME") << "/shape_bank/masks/" << i << ".png";
+		if (std::getenv("NAO_HOME")) {
+			filename << std::getenv("NAO_HOME") << "/shape_bank/masks/" << i << ".png";
+		} else {
+			filename << "/home/nao/shape_bank/masks/" << i << ".png";
+		}
+
+		// if (IS_RUNNING_CORE) {
+		// 	filename << std::getenv("NAO_HOME") << "/shape_bank/masks/" << i << ".png";
+		// } else {
+		// 	filename << cache_.memory->data_path_ << "/shape_bank/masks/" << i << ".png";
+		// }
+		// cout << filename.str() << endl;
+		// cout << std::getenv("NAO_HOME") << endl;
 		shape_bank[i] = cv::imread(filename.str(), CV_LOAD_IMAGE_GRAYSCALE);
+		// cout << shape_bank[i].cols << shape_bank[i].rows << endl;
 	}
 
 	std::cout << "Loaded shape back mask" << endl;
@@ -22,10 +38,14 @@ unsigned char* RobotDetector::getSegImg(){
 }
 
 
-float RobotDetector::getIoU(cv::Mat mask1, cv::Mat mask2) {
+float RobotDetector::getIoU(cv::Mat& mask1, cv::Mat& mask2) {
 
 	cv::Mat _intersection;
 	cv::Mat _union;
+
+	// cout << "mask 1: (" << mask1.cols << " " << mask1.rows << ")" << endl;
+	// cout << "mask 2: (" << mask2.cols << " " << mask2.rows << ")" << endl;
+
 
 	cv::bitwise_and(mask1, mask2, _intersection);
 	cv::bitwise_or(mask1, mask2, _union);

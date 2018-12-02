@@ -3,6 +3,7 @@
 #include <vision/ObjectDetector.h>
 #include <common/WorldObject.h>
 
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -36,6 +37,6 @@ class RobotDetector : public ObjectDetector {
   TextLogger* textlogger;
   void findRobotsByIoU(vector<Blob> &blobs);
   cv::Mat* shape_bank;
-  float getIoU(cv::Mat mask1, cv::Mat mask2);
+  float getIoU(cv::Mat& mask1, cv::Mat& mask2);
   WorldObject* popRobotCandidate(int numMatched);
 };

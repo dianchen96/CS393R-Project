@@ -240,11 +240,13 @@ void VisionWindow::drawRobots(ImageWidget* image) {
   painter.setPen(QPen(QColor(232, 40, 193), 3));
 
   for (int i = 0; i < NUM_ROBOTS; i++) {
+    // std::cout << "Seen " << i << endl;
+
     auto &robot = world_object_block_->objects_[WO_ROBOT_1 + i];
     if(not robot.seen) return;
     if(robot.fromTopCamera and _widgetAssignments[image] == Camera::BOTTOM) return;
     if(not robot.fromTopCamera and _widgetAssignments[image] == Camera::TOP) return;
-
+    // std::cout << "Seen " << i << endl;
     int width = robot.imageWidth;
     int height = robot.imageHeight;
     int x = robot.imageCenterX - width/2;
@@ -252,6 +254,7 @@ void VisionWindow::drawRobots(ImageWidget* image) {
 
     painter.drawRect(QRect(x, y, width, height));
   }
+  // std::cout << "====" << endl;
 
 }
 
