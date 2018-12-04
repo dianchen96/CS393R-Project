@@ -16,7 +16,7 @@
 
 
 #define BLOB_THRESHOLD 500
-#define IOU_THRESHOLD 0.55
+#define IOU_THRESHOLD 0.6
 
 // struct RobotCandidate {
 // 	unsigned char
