@@ -190,7 +190,6 @@ class WalkTowardsBeacon(Node):
 				vy = 0
 				# vtheta = 0
 				vtheta = bearing
-				# commands.setWalkVelocity(0.5,0,bearing)
 				self.postSignal('keep_towards_beacon')
 
 
