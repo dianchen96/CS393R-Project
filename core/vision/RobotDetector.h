@@ -10,11 +10,14 @@
 
 #define TOP_K 10
 
-#define NUM_FACADE 5
+#define NUM_FACADE 2
 #define NUM_SHAPE_BANK 10
 
 #define BLOB_THRESHOLD 500
 #define IOU_THRESHOLD 0.55
+
+// #define WIDTH_RATIO 4.5
+// #define HEIGHT_RATIO 8
 
 #define NUM_ITER_REGION_PROPOSAL
 #define STOP_ITER_THRESHOLD

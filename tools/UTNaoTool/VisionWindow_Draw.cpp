@@ -254,11 +254,11 @@ void VisionWindow::drawRobots(ImageWidget* image) {
 
     painter.drawRect(QRect(x, y, width, height));
 
-    // if (robot.pose == 0) {
-    //   painter.drawText(QPointF(x + 0.75 * width, y + 0.75 * height), "Facade");
-    // } else {
-    //   painter.drawText(QPointF(x + 0.75 * width, y + 0.75 * height), "Side");
-    // }
+    if (robot.pose == 0) {
+      painter.drawText(QPointF(x + 0.75 * width, y + 0.75 * height), "Facade");
+    } else {
+      painter.drawText(QPointF(x + 0.75 * width, y + 0.75 * height), "Side");
+    }
   }
   // std::cout << "====" << endl;
 

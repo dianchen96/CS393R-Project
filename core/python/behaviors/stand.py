@@ -15,9 +15,12 @@ class Playing(StateMachine):
     class Stand(Node):
         def run(self):
             commands.stand()
-            if self.getTime() > 5.0:
-                memory.speech.say("playing stand complete")
-                self.finish()
+            commands.setHeadPanTilt(pan=0, tilt=0, time=0.1)
+
+            # if self.getTime() > 5.0:
+            #     memory.speech.say("playing stand complete")
+            #     self.finish()
 
     def setup(self):
-        self.trans(self.Stand(), C)
+    	stand = self.Stand()
+        self.trans(stand, T(0.5), stand)

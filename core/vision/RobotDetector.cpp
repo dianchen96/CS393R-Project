@@ -17,15 +17,7 @@ RobotDetector::RobotDetector(DETECTOR_DECLARE_ARGS) : DETECTOR_INITIALIZE {
 			filename << "/home/nao/shape_bank/masks/" << i << ".png";
 		}
 
-		// if (IS_RUNNING_CORE) {
-		// 	filename << std::getenv("NAO_HOME") << "/shape_bank/masks/" << i << ".png";
-		// } else {
-		// 	filename << cache_.memory->data_path_ << "/shape_bank/masks/" << i << ".png";
-		// }
-		// cout << filename.str() << endl;
-		// cout << std::getenv("NAO_HOME") << endl;
 		shape_bank[i] = cv::imread(filename.str(), CV_LOAD_IMAGE_GRAYSCALE);
-		// cout << shape_bank[i].cols << shape_bank[i].rows << endl;
 	}
 
 	std::cout << "Loaded shape back mask" << endl;
@@ -54,9 +46,9 @@ float RobotDetector::getIoU(cv::Mat& mask1, cv::Mat& mask2) {
 
 	// std::cout << "IoU: " << iou << endl;
 
-	// if (iou > 0.6) {
-	// 	imshow("candidate", mask1);
-
+	// if (iou > 0.55) {
+	// 	// imshow("candidate", mask1);
+	// 	imshow("mask", mask2);
 	// 	cv::waitKey(0);
 	// }
 	
@@ -97,17 +89,17 @@ int RobotDetector::getPose(int poseNum) {
 
 void RobotDetector::findRobotsByIoU(vector<Blob> &blobs) {
 
-	const int heightRatios[] = {8};
-	const int widthRatios[] = {6};
-	const int ratioSize = 1;
+	const float heightRatios[] = {8,8};
+	const float widthRatios[] = {6,4.5};
+	const int ratioSize = 2;
+
+	// const int dxs[] = {-10,0,10};
+	// const int dys[] = {-10,0,10};
+	// const int offsetSize = 3;
 
 	if(camera_ == Camera::BOTTOM) return;
 
 	auto whiteBlobs = filterBlobs(blobs, c_WHITE, BLOB_THRESHOLD);
-
-	// std::cout << "Num white blobs: " << whiteBlobs.size() << endl;
-
-	// whiteBlobs[0].color = c_ORANGE;
 
 	int numMatched = 0;
 
@@ -117,87 +109,96 @@ void RobotDetector::findRobotsByIoU(vector<Blob> &blobs) {
 		auto blob = whiteBlobs[i];
 
 
-		std::cout << blob << endl;
-		std::cout << "====" << endl;
+		// std::cout << blob << endl;
+		// std::cout << "====" << endl;
 
 		// Extract image
-		float bestIoU = 0.0;
-		int pose = 0;
+		int width = 0;
+		int height = 0;
+		int pose = -1;
 
-		for (int ratioIndex = 0; ratioIndex < ratioSize; ratioIndex++) {
+		// for (int dxi = 0; dxi < offsetSize; dxi++) {
+		// 	for (int dyi = 0; dyi < offsetSize; dyi++) {
+		for (int ri = 0; ri < ratioSize; ri++) {
+				if (pose >= 0) break;
 
-			int widthRatio = widthRatios[ratioIndex];
-			int heightRatio = heightRatios[ratioIndex];
+				// int dx = dxs[dxi];
+				// int dy = dys[dyi];
+				int widthRatio = widthRatios[ri];
+				int heightRatio = heightRatios[ri];
 
-			int xi = max(0., blob.avgX - 0.5 * widthRatio * blob.avgWidth);
-			int xf = min(320., blob.avgX + 0.5 * widthRatio * blob.avgWidth);
-			int yi = max(0., blob.avgY - 0.5 * heightRatio * blob.avgWidth);
-			int yf = min(240., blob.avgY + 0.5 * heightRatio * blob.avgWidth);
+				int xi = max(0., blob.avgX - 0.5 * widthRatio * blob.avgWidth);
+				int xf = min(320., blob.avgX + 0.5 * widthRatio * blob.avgWidth);
+				int yi = max(0., blob.avgY - 0.5 * heightRatio * blob.avgWidth);
+				int yf = min(240., blob.avgY + 0.5 * heightRatio * blob.avgWidth);
 
-			int width = xf - xi;
-			int height = yf - yi;
+				width = xf - xi;
+				height = yf - yi;
 
-			// TODO: Implement this
-			// std::cout << "----" << endl;
+				// Crop image
+				auto image = getSegImg();
+				int imageWidth = iparams_.width;
+				int imageHeight = iparams_.height;
+				cv::Mat cropped_image(height, width, CV_8UC1, cv::Scalar(0));
 
-			// std::cout << "width: " << width << " height: " << height << endl;
-
-			// Crop image
-			auto image = getSegImg();
-			int imageWidth = iparams_.width;
-			int imageHeight = iparams_.height;
-			cv::Mat cropped_image(height, width, CV_8UC1, cv::Scalar(0));
-
-			for (int x = 0; x < width; x++) {
-				for (int y = 0; y < height; y++) {
-					int imageX = x + xi;
-					int imageY = y + yi;
-					auto color = image[imageY * imageWidth + imageX];
-					if (color == c_WHITE) {
-						cropped_image.at<uchar>(y,x) = 255;
+				for (int x = 0; x < width; x++) {
+					for (int y = 0; y < height; y++) {
+						int imageX = x + xi;
+						int imageY = y + yi;
+						auto color = image[imageY * imageWidth + imageX];
+						if (color == c_WHITE) {
+							cropped_image.at<uchar>(y,x) = 255;
+						}
 					}
 				}
-			}
 
-			// Reshape image
-			cv::Mat reshaped_image;
-			cv::resize(cropped_image, reshaped_image, cv::Size(64,64));
+				// Reshape image
+				cv::Mat reshaped_image;
+				cv::resize(cropped_image, reshaped_image, cv::Size(64,64));
 
-			for (int j = 0; j < NUM_SHAPE_BANK; j++) {
-				cv::Mat shape = shape_bank[j];
-				float iou = getIoU(reshaped_image, shape);
-				if (iou > bestIoU) {
-					bestIoU = iou;
-					pose = j;
+				for (int j = 0; j < NUM_SHAPE_BANK; j++) {
+					cv::Mat shape = shape_bank[j];
+					float iou = getIoU(reshaped_image, shape);
+					if (iou > IOU_THRESHOLD) {
+						pose = j;
+						break;
+					}
 				}
-			}
 
-			if (bestIoU > IOU_THRESHOLD && numMatched < NUM_ROBOTS) {
-				// Matched robot
-				auto robot = popRobotCandidate(numMatched);
 
-				robot->imageCenterX = blob.avgX;
-				robot->imageCenterY = blob.avgY;
-				robot->imageHeight = height;
-				robot->imageWidth = width;
-				robot->seen = true;
-				robot->fromTopCamera = (camera_ == Camera::TOP);
-				robot->pose = getPose(pose);
+				// If matched
+				if (pose >= 0 && numMatched < NUM_ROBOTS) {
+					// Matched robot
+					auto robot = popRobotCandidate(numMatched);
 
-				numMatched++;
+					robot->imageCenterX = blob.avgX;
+					robot->imageCenterY = blob.avgY;
+					robot->imageHeight = height;
+					robot->imageWidth = width;
+					robot->seen = true;
+					robot->fromTopCamera = (camera_ == Camera::TOP);
 
-				std::cout << "Matched, x=" << blob.avgX << " y=" << blob.avgY << endl << ", iou=" << bestIoU << endl;
-			}
+					robot->pose = getPose(pose);
+					
+					// cout << pose << " " << robot->pose << endl;
+
+					numMatched++;
+
+					// std::cout << "Matched, x=" << blob.avgX << " y=" << blob.avgY << endl;
+					
+				}
+			// }
+		}
+
 
 		// // Visualization code for debugging
 		// std::ostringstream filename;
 		// filename << i;
 		// imshow( filename.str(), reshaped_image ); 
 		// cv::waitKey(0);
-		}
 	}
 
-	std::cout << "====" << endl;
+	// cout << "====" << endl;
 
 	// Mark the rest of the robots unseen
 	for (int i = numMatched; i < NUM_ROBOTS; i++) {
