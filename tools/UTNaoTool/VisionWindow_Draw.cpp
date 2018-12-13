@@ -8,6 +8,9 @@
 #define MIN_PEN_WIDTH 3
 #define IS_RUNNING_CORE (core_ && core_->vision_ && ((UTMainWnd*)parent_)->runCoreRadio->isChecked())
 
+int count(0); // global variable
+
+
 void VisionWindow::redrawImages() {
   if(!enableDraw_) return;
 
@@ -100,6 +103,14 @@ void VisionWindow::redrawImages(ImageWidget* rawImage, ImageWidget* segImage, Im
     drawHorizonLine(verticalBlobImage);
   }
 
+  // Save image
+  auto _rawImage = segImage->getImage();
+  std::ostringstream filename;
+  filename << std::getenv("NAO_HOME") << "/evaluations/" << ::count << "_seg.jpg";
+  ::count++;
+  _rawImage->save(QString::fromStdString(filename.str()), "JPEG");
+
+
   // if overlay is on, then draw objects on the raw and seg image as well
   if (cbxOverlay->isChecked()) {
     drawGoal(rawImage);
@@ -114,6 +125,15 @@ void VisionWindow::redrawImages(ImageWidget* rawImage, ImageWidget* segImage, Im
     drawBallCands(segImage);
     drawBeacons(segImage);
   }
+
+  // ::count++;
+
+  // auto _rawImage = rawImage->getImage();
+  // std::ostringstream filename;
+  // filename << std::getenv("NAO_HOME") << "/evaluations/" << ::count << "_pred.jpg";
+  // ::count++;
+  // _rawImage->save(QString::fromStdString(filename.str()), "JPEG");
+
 
   drawBall(verticalBlobImage);
   drawBallCands(verticalBlobImage);
@@ -236,8 +256,17 @@ void VisionWindow::drawRobots(ImageWidget* image) {
   if(!config_.all) return;
   if(world_object_block_ == NULL) return;
 
+  // auto _image = image->getImage();
+
   QPainter painter(image->getImage());
   painter.setPen(QPen(QColor(232, 40, 193), 3));
+
+  // Start filestream write
+
+  // ofstream prediction;
+  // std::ostringstream filename;
+  // filename << std::getenv("NAO_HOME") << "/evaluations/3_060/" << ::count << "_pred.txt";
+  // prediction.open (filename.str());
 
   for (int i = 0; i < NUM_ROBOTS; i++) {
     // std::cout << "Seen " << i << endl;
@@ -259,8 +288,20 @@ void VisionWindow::drawRobots(ImageWidget* image) {
     } else {
       painter.drawText(QPointF(x + 0.75 * width, y + 0.75 * height), "Side");
     }
+
+
+    // write to file
+
+    // prediction << max(0,x) << "," << max(0,y) << ";";
+    // prediction << max(0,x) << "," << min(240,y + height) << ";";
+    // prediction << min(320,x + width) << "," << max(0,y) << ";";
+    // prediction << min(320,x + width) << "," << min(240,y + height) << ";";
+    // prediction << endl;
+
   }
   // std::cout << "====" << endl;
+
+  // prediction.close();
 
 }
 
